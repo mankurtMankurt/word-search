@@ -1,66 +1,157 @@
-// Define words for each age group
-const wordsByAge = {
-    '4-6': ['CAT', 'DOG', 'SUN', 'MOON', 'TREE'],
-    '7-9': ['APPLE', 'ORANGE', 'ELEPHANT', 'GIRAFFE', 'MONKEY'],
-    '10-12': ['KANGAROO', 'DOLPHIN', 'PYRAMID', 'CONSTELLATION', 'ARCHAEOLOGY']
+import React, { useState, useEffect } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Printer, RefreshCw } from 'lucide-react';
+
+const WORD_POOLS = {
+  '5-7': ['CAT', 'DOG', 'BIRD', 'FISH', 'TREE', 'SUN', 'MOON', 'STAR', 'BALL', 'BOOK', 'HAT', 'SHOE', 'CAKE', 'FROG', 'DUCK'],
+  '8-10': ['SCHOOL', 'FRIEND', 'PLANET', 'OCEAN', 'MOUNTAIN', 'RAINBOW', 'COMPUTER', 'BICYCLE', 'BUTTERFLY', 'DINOSAUR', 'LIBRARY', 'PIZZA', 'GUITAR', 'CAMERA', 'ROCKET'],
+  '11-13': ['ADVENTURE', 'SCIENCE', 'HISTORY', 'TECHNOLOGY', 'ENVIRONMENT', 'GEOGRAPHY', 'LITERATURE', 'MATHEMATICS', 'ASTRONOMY', 'CHEMISTRY', 'EXPERIMENT', 'CIVILIZATION', 'ECOSYSTEM', 'INNOVATION', 'REVOLUTION']
 };
 
-// Generate a random puzzle grid
-function generatePuzzleGrid(words) {
-    const gridSize = 10; // Define grid size (10x10)
-    const grid = Array(gridSize).fill().map(() => Array(gridSize).fill('')); // Initialize empty grid
+const GRID_SIZE = 10;
+const WORDS_PER_PUZZLE = 7;
 
-    // Insert words into grid
-    words.forEach(word => {
-        const wordLength = word.length;
-        const startRow = Math.floor(Math.random() * (gridSize - wordLength));
-        const startCol = Math.floor(Math.random() * (gridSize - wordLength));
-        for (let i = 0; i < wordLength; i++) {
-            grid[startRow][startCol + i] = word[i];
-        }
-    });
+const selectRandomWords = (pool, count) => {
+  const shuffled = [...pool].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+};
 
-    // Fill remaining empty cells with random letters
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    for (let row = 0; row < gridSize; row++) {
-        for (let col = 0; col < gridSize; col++) {
-            if (!grid[row][col]) {
-                grid[row][col] = alphabet[Math.floor(Math.random() * alphabet.length)];
-            }
-        }
+const generatePuzzle = (ageGroup) => {
+  const words = selectRandomWords(WORD_POOLS[ageGroup], WORDS_PER_PUZZLE);
+  const grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(''));
+  const placedWords = [];
+
+  words.forEach(word => {
+    let placed = false;
+    let attempts = 0;
+    while (!placed && attempts < 100) {
+      const direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+      const row = Math.floor(Math.random() * GRID_SIZE);
+      const col = Math.floor(Math.random() * GRID_SIZE);
+
+      if (canPlaceWord(grid, word, row, col, direction)) {
+        placeWord(grid, word, row, col, direction);
+        placedWords.push({ word, row, col, direction });
+        placed = true;
+      }
+      attempts++;
     }
+  });
 
-    return grid;
-}
+  fillEmptySpaces(grid);
+  return { grid, placedWords, words };
+};
 
-// Render the puzzle grid on the page
-function renderPuzzleGrid(grid) {
-    const puzzleContainer = document.getElementById('puzzle-container');
-    puzzleContainer.innerHTML = ''; // Clear previous puzzle
+const canPlaceWord = (grid, word, row, col, direction) => {
+  if (direction === 'horizontal' && col + word.length > GRID_SIZE) return false;
+  if (direction === 'vertical' && row + word.length > GRID_SIZE) return false;
 
-    grid.forEach(row => {
-        row.forEach(letter => {
-            const cell = document.createElement('div');
-            cell.className = 'letter-cell';
-            cell.textContent = letter;
-            puzzleContainer.appendChild(cell);
-        });
-    });
-}
+  for (let i = 0; i < word.length; i++) {
+    const currentRow = direction === 'vertical' ? row + i : row;
+    const currentCol = direction === 'horizontal' ? col + i : col;
+    if (grid[currentRow][currentCol] !== '' && grid[currentRow][currentCol] !== word[i]) {
+      return false;
+    }
+  }
+  return true;
+};
 
-// Initialize the page with a default puzzle
-function initialize() {
-    const ageSelect = document.getElementById('age-select');
-    const selectedAge = ageSelect.value;
-    const words = wordsByAge[selectedAge];
-    const grid = generatePuzzleGrid(words);
-    renderPuzzleGrid(grid);
-}
+const placeWord = (grid, word, row, col, direction) => {
+  for (let i = 0; i < word.length; i++) {
+    const currentRow = direction === 'vertical' ? row + i : row;
+    const currentCol = direction === 'horizontal' ? col + i : col;
+    grid[currentRow][currentCol] = word[i];
+  }
+};
 
-// Event Listeners
-document.getElementById('age-select').addEventListener('change', initialize);
-document.getElementById('refresh-btn').addEventListener('click', initialize);
-document.getElementById('print-btn').addEventListener('click', () => window.print());
+const fillEmptySpaces = (grid) => {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (let i = 0; i < GRID_SIZE; i++) {
+    for (let j = 0; j < GRID_SIZE; j++) {
+      if (grid[i][j] === '') {
+        grid[i][j] = letters[Math.floor(Math.random() * letters.length)];
+      }
+    }
+  }
+};
 
-// Initialize on page load
-window.onload = initialize;
+const WordSearchGame = () => {
+  const [ageGroup, setAgeGroup] = useState('5-7');
+  const [puzzle, setPuzzle] = useState({ grid: [], placedWords: [], words: [] });
+
+  useEffect(() => {
+    generateNewPuzzle();
+  }, [ageGroup]);
+
+  const generateNewPuzzle = () => {
+    const newPuzzle = generatePuzzle(ageGroup);
+    setPuzzle(newPuzzle);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="min-h-screen bg-blue-100 p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 className="text-4xl font-bold text-center mb-8 text-blue-600">Word Search Puzzle</h1>
+        
+        <div className="flex justify-between items-center mb-8">
+          <Select value={ageGroup} onValueChange={setAgeGroup}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select age group" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5-7">5-7 years</SelectItem>
+              <SelectItem value="8-10">8-10 years</SelectItem>
+              <SelectItem value="11-13">11-13 years</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <div>
+            <Button onClick={generateNewPuzzle} className="mr-4 bg-green-500 hover:bg-green-600">
+              <RefreshCw className="mr-2 h-4 w-4" /> New Puzzle
+            </Button>
+            <Button onClick={handlePrint} className="bg-purple-500 hover:bg-purple-600">
+              <Printer className="mr-2 h-4 w-4" /> Print
+            </Button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-10 gap-1 mb-8">
+          {puzzle.grid.map((row, rowIndex) => (
+            row.map((letter, colIndex) => (
+              <div key={`${rowIndex}-${colIndex}`} className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded">
+                <span className="text-lg font-bold">{letter}</span>
+              </div>
+            ))
+          ))}
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h2 className="text-2xl font-bold mb-4 text-green-600">Words to Find:</h2>
+            <ul className="list-disc pl-5">
+              {puzzle.words.map((word, index) => (
+                <li key={index} className="text-lg">{word}</li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold mb-4 text-orange-600">How to Play:</h2>
+            <ol className="list-decimal pl-5">
+              <li className="mb-2">Look for the words listed on the left.</li>
+              <li className="mb-2">Words can be horizontal, vertical, or diagonal.</li>
+              <li className="mb-2">Circle or highlight the words you find.</li>
+              <li className="mb-2">Have fun and enjoy the puzzle!</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default WordSearchGame;
