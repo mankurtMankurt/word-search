@@ -3,25 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimal Word Search Game</title>
-    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <title>Word Search Puzzle for Kids</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #E1F5FE;
+            color: #333;
+        }
+        h1 {
+            color: #1565C0;
+        }
+        #game-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        select, button {
+            font-size: 16px;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #2196F3;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        select:hover, button:hover {
+            background-color: #1976D2;
+        }
+        #puzzle {
+            display: grid;
+            grid-gap: 5px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .letter {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #BBDEFB;
+            border-radius: 4px;
+        }
+        #word-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .word {
+            background-color: #81D4FA;
+            padding: 5px 10px;
+            border-radius: 15px;
+        }
+    </style>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="text/babel">
-        const MinimalGame = () => {
-            return (
-                <div style={{padding: '20px', fontFamily: 'Arial, sans-serif'}}>
-                    <h1>Minimal Word Search Game</h1>
-                    <p>If you can see this, React is working!</p>
-                    <button onClick={() => alert('Button clicked!')}>Click me</button>
-                </div>
-            );
+    <h1>Word Search Puzzle</h1>
+    <div id="game-container">
+        <div id="controls">
+            <select id="age-group">
+                <option value="5-7">Ages 5-7</option>
+                <option value="8-10">Ages 8-10</option>
+                <option value="11-12">Ages 11-12</option>
+            </select>
+            <button id="refresh">New Puzzle</button>
+            <button id="print">Print</button>
+        </div>
+        <div id="puzzle"></div>
+        <div id="word-list"></div>
+    </div>
+
+    <script>
+        const words = {
+            '5-7': ['CAT', 'DOG', 'SUN', 'MOON', 'STAR', 'BALL'],
+            '8-10': ['PLANET', 'OCEAN', 'FOREST', 'SCHOOL', 'FRIEND', 'MUSIC'],
+            '11-12': ['ADVENTURE', 'CHALLENGE', 'DISCOVERY', 'IMAGINATION', 'KNOWLEDGE', 'UNIVERSE']
         };
 
-        ReactDOM.render(<MinimalGame />, document.getElementById('root'));
+        const gridSize = 12;
+        let currentWords = [];
+
+        function generatePuzzle() {
+            const ageGroup = document.getElementById('age-group').value;
+            currentWords = words[ageGroup];
+            const grid = Array(gridSize).fill().map(() => Array(gridSize).fill(''));
+            const usedPositions = new Set();
+
+            currentWords.forEach(word => {
+                let placed = false;
+                while (!placed) {
+                    const direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+                    const row = Math.floor(Math.random() * gridSize);
+                    const col = Math.floor(Math.random() * gridSize);
+
+                    if (canPlaceWord(grid, word, row, col, direction, usedPositions)) {
+                        placeWord(grid, word, row, col, direction, usedPositions);
+                        placed = true;
+                    }
+                }
+            });
+
+            fillEmptySpaces(grid);
+            displayPuzzle(grid);
+            displayWordList();
+        }
+
+        function canPlaceWord(grid, word, row, col, direction, usedPositions) {
+            if (direction === 'horizontal' && col + word.length > gridSize) return false;
+            if (direction === 'vertical' && row + word.length > gridSize) return false;
+
+            for (let i = 0; i < word.length; i++) {
+                const newRow = direction === 'vertical' ? row + i : row;
+                const newCol = direction === 'horizontal' ? col + i : col;
+                const pos = `${newRow},${newCol}`;
+                if (usedPositions.has(pos) || (grid[newRow][newCol] !== '' && grid[newRow][newCol] !== word[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function placeWord(grid, word, row, col, direction, usedPositions) {
+            for (let i = 0; i < word.length; i++) {
+                const newRow = direction === 'vertical' ? row + i : row;
+                const newCol = direction === 'horizontal' ? col + i : col;
+                grid[newRow][newCol] = word[i];
+                usedPositions.add(`${newRow},${newCol}`);
+            }
+        }
+
+        function fillEmptySpaces(grid) {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (grid[i][j] === '') {
+                        grid[i][j] = letters[Math.floor(Math.random() * letters.length)];
+                    }
+                }
+            }
+        }
+
+        function displayPuzzle(grid) {
+            const puzzleElement = document.getElementById('puzzle');
+            puzzleElement.innerHTML = '';
+            puzzleElement.style.gridTemplateColumns = `repeat(${gridSize}, 30px)`;
+
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const letter = document.createElement('div');
+                    letter.className = 'letter';
+                    letter.textContent = grid[i][j];
+                    puzzleElement.appendChild(letter);
+                }
+            }
+        }
+
+        function displayWordList() {
+            const wordListElement = document.getElementById('word-list');
+            wordListElement.innerHTML = '';
+            currentWords.forEach(word => {
+                const wordElement = document.createElement('div');
+                wordElement.className = 'word';
+                wordElement.textContent = word;
+                wordListElement.appendChild(wordElement);
+            });
+        }
+
+        document.getElementById('age-group').addEventListener('change', generatePuzzle);
+        document.getElementById('refresh').addEventListener('click', generatePuzzle);
+        document.getElementById('print').addEventListener('click', () => window.print());
+
+        // Initial puzzle generation
+        generatePuzzle();
     </script>
 </body>
 </html>
