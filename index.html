@@ -65,6 +65,7 @@
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 30px;
+            justify-content: center;
         }
         .letter {
             width: 35px;
@@ -125,17 +126,37 @@
 
     <script>
         const words = {
-            '5-7': ['CAT', 'DOG', 'SUN', 'MOON', 'STAR', 'BALL'],
-            '8-10': ['PLANET', 'OCEAN', 'FOREST', 'SCHOOL', 'FRIEND', 'MUSIC'],
-            '11-12': ['ADVENTURE', 'CHALLENGE', 'DISCOVERY', 'IMAGINATION', 'KNOWLEDGE', 'UNIVERSE']
+            '5-7': ['CAT', 'DOG', 'SUN', 'MOON', 'STAR', 'BALL', 'HAT', 'TREE', 'FISH', 'BIRD', 'BOOK', 'SHOE', 'CAKE', 'RAIN', 'FROG', 'BEAR', 'DUCK', 'LOVE', 'MILK', 'JUMP', 'SING', 'PLAY', 'SMILE', 'HUG', 'HAPPY', 'RED', 'BLUE', 'GREEN', 'YELLOW', 'PINK', 'APPLE', 'BANANA', 'COOKIE', 'ICE', 'WATER', 'TOY', 'DOLL', 'CAR', 'BOAT', 'TRAIN', 'BUS', 'KITE', 'SWING', 'SLIDE', 'SAND', 'BEACH', 'PARK', 'HOME', 'SCHOOL', 'FRIEND', 'MOM', 'DAD', 'BABY', 'GIRL', 'BOY', 'PEN', 'PAPER', 'DESK', 'CHAIR', 'BED', 'DOOR', 'WINDOW', 'WALL', 'FLOOR', 'ROOF', 'GARDEN', 'FLOWER', 'GRASS', 'LEAF', 'CLOUD', 'WIND', 'SNOW', 'COLD', 'HOT', 'DAY', 'NIGHT', 'WEEK', 'YEAR', 'TIME', 'CLOCK', 'HAND', 'FOOT', 'HEAD', 'EYE', 'NOSE', 'EAR', 'MOUTH', 'HAIR', 'TOOTH', 'ARM', 'LEG', 'KNEE', 'GOOD', 'BAD', 'BIG', 'SMALL', 'LONG', 'SHORT', 'OLD', 'NEW', 'FAST', 'SLOW'],
+            '8-10': ['PLANET', 'OCEAN', 'FOREST', 'MOUNTAIN', 'RIVER', 'DESERT', 'ISLAND', 'VOLCANO', 'EARTHQUAKE', 'HURRICANE', 'TORNADO', 'GALAXY', 'UNIVERSE', 'ASTRONAUT', 'ROCKET', 'SATELLITE', 'COMET', 'METEOR', 'TELESCOPE', 'MICROSCOPE', 'EXPERIMENT', 'SCIENTIST', 'INVENTOR', 'DISCOVERY', 'ADVENTURE', 'EXPLORER', 'TREASURE', 'PIRATE', 'CASTLE', 'KNIGHT', 'DRAGON', 'WIZARD', 'MAGIC', 'SPELL', 'POTION', 'UNICORN', 'MERMAID', 'FAIRY', 'GIANT', 'MONSTER', 'VAMPIRE', 'WEREWOLF', 'ZOMBIE', 'GHOST', 'ALIEN', 'ROBOT', 'COMPUTER', 'INTERNET', 'WEBSITE', 'SOFTWARE', 'PROGRAM', 'KEYBOARD', 'MONITOR', 'PRINTER', 'CAMERA', 'TELEPHONE', 'TELEVISION', 'RADIO', 'NEWSPAPER', 'MAGAZINE', 'NOVEL', 'POETRY', 'AUTHOR', 'ARTIST', 'MUSICIAN', 'DANCER', 'ACTOR', 'SINGER', 'CONCERT', 'THEATER', 'MUSEUM', 'GALLERY', 'PAINTING', 'SCULPTURE', 'PHOTOGRAPH', 'INSTRUMENT', 'ORCHESTRA', 'BALLET', 'OPERA', 'COMEDY', 'TRAGEDY', 'MYSTERY', 'ADVENTURE', 'FANTASY', 'SCIENCE', 'HISTORY', 'GEOGRAPHY', 'MATHEMATICS', 'LANGUAGE', 'GRAMMAR', 'VOCABULARY', 'SPELLING', 'PUNCTUATION', 'SENTENCE', 'PARAGRAPH', 'ESSAY', 'REPORT', 'PRESENTATION', 'PROJECT', 'EXPERIMENT', 'HYPOTHESIS', 'THEORY', 'CONCLUSION'],
+            '11-12': ['ADVENTURE', 'CHALLENGE', 'DISCOVERY', 'IMAGINATION', 'KNOWLEDGE', 'UNIVERSE', 'INNOVATION', 'TECHNOLOGY', 'REVOLUTION', 'EVOLUTION', 'CIVILIZATION', 'ARCHAEOLOGY', 'ANTHROPOLOGY', 'PHILOSOPHY', 'PSYCHOLOGY', 'SOCIOLOGY', 'ECONOMICS', 'POLITICS', 'GOVERNMENT', 'DEMOCRACY', 'REPUBLIC', 'MONARCHY', 'DICTATORSHIP', 'CONSTITUTION', 'PARLIAMENT', 'CONGRESS', 'PRESIDENT', 'ELECTION', 'CAMPAIGN', 'DEBATE', 'DIPLOMACY', 'ALLIANCE', 'TREATY', 'NEGOTIATION', 'COMPROMISE', 'CONFLICT', 'RESOLUTION', 'MEDIATION', 'ARBITRATION', 'JUSTICE', 'EQUALITY', 'FREEDOM', 'RIGHTS', 'RESPONSIBILITY', 'CITIZENSHIP', 'COMMUNITY', 'SOCIETY', 'CULTURE', 'TRADITION', 'CUSTOM', 'RITUAL', 'CEREMONY', 'FESTIVAL', 'CELEBRATION', 'HOLIDAY', 'RELIGION', 'SPIRITUALITY', 'BELIEF', 'FAITH', 'MORALITY', 'ETHICS', 'VALUES', 'PRINCIPLES', 'INTEGRITY', 'HONESTY', 'LOYALTY', 'COMPASSION', 'EMPATHY', 'SYMPATHY', 'KINDNESS', 'GENEROSITY', 'CHARITY', 'VOLUNTEER', 'ACTIVISM', 'ADVOCACY', 'PROTEST', 'REVOLUTION', 'REFORM', 'PROGRESS', 'DEVELOPMENT', 'SUSTAINABILITY', 'CONSERVATION', 'PRESERVATION', 'BIODIVERSITY', 'ECOSYSTEM', 'ENVIRONMENT', 'CLIMATE', 'ATMOSPHERE', 'POLLUTION', 'RECYCLING', 'RENEWABLE', 'ALTERNATIVE', 'ENERGY', 'EFFICIENCY', 'INNOVATION', 'CREATIVITY', 'ORIGINALITY', 'INSPIRATION', 'MOTIVATION', 'DETERMINATION', 'PERSEVERANCE', 'RESILIENCE', 'COURAGE', 'CONFIDENCE', 'SUCCESS', 'ACHIEVEMENT', 'ACCOMPLISHMENT']
         };
 
-        const gridSize = 12;
+        let gridSize;
         let currentWords = [];
+
+        function getRandomWords(ageGroup, count) {
+            const shuffled = words[ageGroup].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function setGridSize(ageGroup) {
+            switch(ageGroup) {
+                case '5-7':
+                    gridSize = 8;
+                    break;
+                case '8-10':
+                    gridSize = 10;
+                    break;
+                case '11-12':
+                    gridSize = 12;
+                    break;
+            }
+        }
 
         function generatePuzzle() {
             const ageGroup = document.getElementById('age-group').value;
-            currentWords = words[ageGroup];
+            setGridSize(ageGroup);
+            currentWords = getRandomWords(ageGroup, 6);
             const grid = Array(gridSize).fill().map(() => Array(gridSize).fill(''));
             const usedPositions = new Set();
 
